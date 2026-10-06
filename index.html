@@ -1,0 +1,820 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>DistriLab — Parallel & Distributed Computing Interactive Playground</title>
+  <meta name="description" content="Interactive visual laboratory and sandbox covering everything in Parallel and Distributed Computing: multi-threading Web Workers, Amdahl's Law, Raft consensus, Dining Philosophers deadlock, Consistent Hashing, Gossip Protocol, Vector Clocks, and MapReduce.">
+
+  <!-- Fonts & CDN Libraries -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+  <!-- Custom CSS & Favicon -->
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%2306b6d4'><path d='M13 10V3L4 14h7v7l9-11h-7z'/></svg>">
+  <link rel="stylesheet" href="css/styles.css">
+</head>
+<body class="bg-[#090d16] text-slate-100 min-h-screen flex flex-col font-sans">
+
+  <!-- Top Navigation Header -->
+  <header class="app-header">
+    <div class="header-container">
+      <div class="flex items-center gap-3">
+        <div class="logo-icon">
+          <svg class="w-5 h-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/>
+          </svg>
+        </div>
+        <div>
+          <div class="logo-title">DistriLab</div>
+          <div class="logo-subtitle">Parallel & Distributed Computing Interactive Lab</div>
+        </div>
+      </div>
+
+      <!-- Hardware detection badges -->
+      <div class="header-stats">
+        <div class="stat-pill" title="Native hardware concurrency detected in browser">
+          <span class="indicator-dot"></span>
+          <span id="hw-concurrency-badge">Detecting Cores...</span>
+        </div>
+        <div class="stat-pill hidden sm:flex">
+          <span class="text-slate-400">Host:</span>
+          <span id="device-arch-badge" class="text-slate-300">Browser</span>
+        </div>
+        <a href="https://github.com/hammadshakeelai/distrilab" target="_blank" rel="noreferrer" class="stat-pill hover:border-cyan-400/50 transition-colors">
+          <svg class="w-4 h-4 text-slate-300" fill="currentColor" viewBox="0 0 24 24">
+            <path fill-rule="evenodd" clip-rule="evenodd" d="M12 2C6.477 2 2 6.484 2 12.017c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.53 1.032 1.53 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0112 6.844c.85.004 1.705.115 2.504.337 1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.202 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.943.359.309.678.92.678 1.855 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.019 10.019 0 0022 12.017C22 6.484 17.522 2 12 2z"/>
+          </svg>
+          <span class="text-slate-300">GitHub</span>
+        </a>
+      </div>
+    </div>
+  </header>
+
+  <!-- Interactive Module Scroller Tabs -->
+  <nav class="nav-scroller">
+    <div class="nav-container">
+      <button class="nav-tab-btn active" data-tab="benchmarks">
+        <span>⚡ Multi-Core Benchmark</span>
+        <span class="tab-badge">Hardware</span>
+      </button>
+      <button class="nav-tab-btn" data-tab="amdahl">
+        <span>📐 Amdahl & Gustafson</span>
+        <span class="tab-badge">Theory</span>
+      </button>
+      <button class="nav-tab-btn" data-tab="flynn">
+        <span>🏛️ Flynn's Taxonomy</span>
+        <span class="tab-badge">Arch</span>
+      </button>
+      <button class="nav-tab-btn" data-tab="philosophers">
+        <span>🍝 Dining Philosophers</span>
+        <span class="tab-badge">Deadlock</span>
+      </button>
+      <button class="nav-tab-btn" data-tab="raft">
+        <span>🗳️ Raft Consensus</span>
+        <span class="tab-badge">Quorum</span>
+      </button>
+      <button class="nav-tab-btn" data-tab="hashing">
+        <span>🌐 Consistent Hashing</span>
+        <span class="tab-badge">Storage</span>
+      </button>
+      <button class="nav-tab-btn" data-tab="gossip">
+        <span>📡 Gossip Protocol</span>
+        <span class="tab-badge">P2P</span>
+      </button>
+      <button class="nav-tab-btn" data-tab="clocks">
+        <span>⏱️ Vector & Lamport Clocks</span>
+        <span class="tab-badge">Time</span>
+      </button>
+      <button class="nav-tab-btn" data-tab="mapreduce">
+        <span>🏭 MapReduce Pipeline</span>
+        <span class="tab-badge">Compute</span>
+      </button>
+      <button class="nav-tab-btn" data-tab="atlas">
+        <span>📖 PDC Knowledge Atlas</span>
+        <span class="tab-badge">Encyclopedia</span>
+      </button>
+    </div>
+  </nav>
+
+  <!-- Main Content Area -->
+  <main class="app-main">
+
+    <!-- ========================================================================= -->
+    <!-- TAB 1: REAL MULTI-CORE BENCHMARK (WEB WORKERS)                             -->
+    <!-- ========================================================================= -->
+    <section id="tab-benchmarks" class="module-section active">
+      <div class="module-hero">
+        <div>
+          <h2>
+            <span>⚡ Real-Hardware Multi-Threaded Benchmark</span>
+            <span class="badge-tag badge-parallel">Client-Side Multi-Core</span>
+          </h2>
+          <p>
+            Executes real parallel compute workloads directly across your physical CPU cores using asynchronous JavaScript Web Workers. Measure actual wall-clock speedup factor \(S_p = T_1 / T_p\) and multi-core parallel efficiency.
+          </p>
+        </div>
+      </div>
+
+      <!-- Controls Panel -->
+      <div class="glass-panel controls-card">
+        <div class="control-group">
+          <label>Workload Algorithm</label>
+          <select id="bench-workload" class="input-select">
+            <option value="pi">Monte Carlo π Estimation (Stochastic Embarrassingly Parallel)</option>
+            <option value="mandelbrot" selected>Mandelbrot Fractal Slicing (Load-Imbalanced Parallel)</option>
+            <option value="matrix">Dense Matrix Multiplication (Memory & Cache Contention)</option>
+          </select>
+        </div>
+
+        <div class="control-group">
+          <label>Worker Threads (p)</label>
+          <select id="bench-threads" class="input-select">
+            <!-- Populated dynamically based on navigator.hardwareConcurrency -->
+          </select>
+        </div>
+
+        <div class="control-group">
+          <label>Intensity / Problem Size</label>
+          <select id="bench-intensity" class="input-select">
+            <option value="1">Standard (Fast)</option>
+            <option value="2" selected>Medium (Recommended)</option>
+            <option value="4">High Stress (Maximum Cores)</option>
+          </select>
+        </div>
+
+        <div class="flex items-center gap-2 pt-4 sm:pt-0">
+          <button id="bench-run-single" class="btn-primary">
+            <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z"/></svg>
+            <span>Run Selected</span>
+          </button>
+          <button id="bench-run-sweep" class="btn-secondary" title="Benchmark sequentially from 1 to Max Cores to generate full scaling curve">
+            <span>Sweep Scaling Curve</span>
+          </button>
+          <button id="bench-reset" class="btn-secondary">Reset</button>
+        </div>
+      </div>
+
+      <!-- Performance Metrics HUD -->
+      <div class="grid-4">
+        <div class="metric-box">
+          <span class="metric-label">Execution Duration (Tp)</span>
+          <span id="metric-time" class="metric-val">-- ms</span>
+        </div>
+        <div class="metric-box">
+          <span class="metric-label">Observed Speedup S(p)</span>
+          <span id="metric-speedup" class="metric-val emerald">--</span>
+        </div>
+        <div class="metric-box">
+          <span class="metric-label">Parallel Efficiency (E = S/p)</span>
+          <span id="metric-efficiency" class="metric-val purple">--</span>
+        </div>
+        <div class="metric-box">
+          <span class="metric-label">Workload Output Status</span>
+          <span id="metric-result-detail" class="text-xs font-mono text-cyan-300 mt-2 truncate">Ready to launch</span>
+        </div>
+      </div>
+
+      <!-- Live Worker Core Activity Gauges -->
+      <div class="glass-panel p-4 mb-6">
+        <div class="flex items-center justify-between mb-3">
+          <span class="text-xs font-mono uppercase text-slate-400">Live Worker Dispatcher Status</span>
+          <span id="bench-status" class="text-xs font-mono text-cyan-400">Ready</span>
+        </div>
+        <div id="core-activity-grid" class="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-8 gap-3">
+          <!-- Populated dynamically -->
+        </div>
+      </div>
+
+      <!-- Live Visualization & Performance Curve -->
+      <div class="grid-2">
+        <div class="glass-panel p-4">
+          <div class="text-xs font-mono uppercase text-slate-400 mb-2">Live Output Visualizer (Mandelbrot Canvas)</div>
+          <div class="vis-container h-[360px] bg-slate-950">
+            <canvas id="mandelbrot-canvas" class="w-full h-full object-contain"></canvas>
+          </div>
+        </div>
+
+        <div class="glass-panel p-4">
+          <div class="text-xs font-mono uppercase text-slate-400 mb-2">Empirical Speedup & Time Scaling Curve</div>
+          <div class="h-[360px]">
+            <canvas id="benchmark-chart"></canvas>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ========================================================================= -->
+    <!-- TAB 2: AMDAHL'S LAW VS GUSTAFSON'S LAW                                     -->
+    <!-- ========================================================================= -->
+    <section id="tab-amdahl" class="module-section">
+      <div class="module-hero">
+        <div>
+          <h2>
+            <span>📐 Amdahl's Law vs Gustafson's Law Scaling</span>
+            <span class="badge-tag badge-theory">Theoretical Limits</span>
+          </h2>
+          <p>
+            Explore the fundamental mathematical tension between <strong>Strong Scaling</strong> (fixed problem size, bounded by serial bottleneck) and <strong>Weak Scaling</strong> (expanding problem size proportional to processors).
+          </p>
+        </div>
+      </div>
+
+      <!-- Sliders & Preset Controls -->
+      <div class="glass-panel controls-card">
+        <div class="control-group min-w-[240px]">
+          <div class="flex justify-between items-center mb-1">
+            <label>Parallel Fraction (P)</label>
+            <span id="amdahl-fraction-val" class="text-xs font-mono text-cyan-400">90.0%</span>
+          </div>
+          <input id="amdahl-fraction-slider" type="range" min="0.50" max="0.999" step="0.005" value="0.90" class="w-full accent-cyan-500">
+          <div class="flex gap-1.5 mt-2">
+            <button class="preset-p-btn text-[10px] font-mono px-2 py-0.5 rounded bg-slate-800 text-slate-300 hover:bg-slate-700" data-value="0.75">75%</button>
+            <button class="preset-p-btn text-[10px] font-mono px-2 py-0.5 rounded bg-slate-800 text-slate-300 hover:bg-slate-700" data-value="0.90">90%</button>
+            <button class="preset-p-btn text-[10px] font-mono px-2 py-0.5 rounded bg-slate-800 text-slate-300 hover:bg-slate-700" data-value="0.95">95%</button>
+            <button class="preset-p-btn text-[10px] font-mono px-2 py-0.5 rounded bg-slate-800 text-slate-300 hover:bg-slate-700" data-value="0.99">99%</button>
+          </div>
+        </div>
+
+        <div class="control-group min-w-[200px]">
+          <div class="flex justify-between items-center mb-1">
+            <label>Evaluated Cores (N)</label>
+            <span id="amdahl-n-val" class="text-xs font-mono text-emerald-400">16 Cores</span>
+          </div>
+          <input id="amdahl-n-slider" type="range" min="1" max="128" step="1" value="16" class="w-full accent-emerald-500">
+        </div>
+
+        <div class="control-group">
+          <label>Scaling Domain Ceiling</label>
+          <select id="amdahl-range-select" class="input-select">
+            <option value="64">Up to 64 Processors</option>
+            <option value="128" selected>Up to 128 Processors</option>
+            <option value="512">Up to 512 Processors</option>
+            <option value="1024">Up to 1,024 Processors (Supercomputer)</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- Computed HUD Metrics -->
+      <div class="grid-4">
+        <div class="metric-box">
+          <span class="metric-label">Amdahl Speedup @ N</span>
+          <span id="amdahl-val-speedup" class="metric-val">--</span>
+        </div>
+        <div class="metric-box">
+          <span class="metric-label">Amdahl Theoretical Max (N→∞)</span>
+          <span id="amdahl-val-max" class="metric-val text-rose-400">--</span>
+        </div>
+        <div class="metric-box">
+          <span class="metric-label">Gustafson Speedup @ N</span>
+          <span id="gustafson-val-speedup" class="metric-val purple">--</span>
+        </div>
+        <div class="metric-box">
+          <span class="metric-label">Amdahl Efficiency (S/N)</span>
+          <span id="amdahl-val-efficiency" class="metric-val amber">--</span>
+        </div>
+      </div>
+
+      <!-- Chart and Math Breakdown -->
+      <div class="grid-2">
+        <div class="glass-panel p-4">
+          <div class="text-xs font-mono uppercase text-slate-400 mb-2">Interactive Scaling Curves</div>
+          <div class="h-[380px]">
+            <canvas id="amdahl-chart"></canvas>
+          </div>
+        </div>
+
+        <div class="glass-panel p-5 flex flex-col justify-between">
+          <div>
+            <h3 class="text-base font-bold text-slate-200 mb-3">Strong Scaling vs Weak Scaling Insights</h3>
+            
+            <div class="math-card">
+              <div class="text-cyan-400 font-bold mb-1">Amdahl's Law (Strong Scaling):</div>
+              <div>S(N) = 1 / [ (1 - P) + (P / N) ]</div>
+              <div class="text-xs text-slate-400 mt-1">Fixed problem size. The sequential portion (1 - P) forms an impassable speedup asymptotic barrier 1 / (1 - P).</div>
+            </div>
+
+            <div class="math-card border-purple-500">
+              <div class="text-purple-400 font-bold mb-1">Gustafson-Barsis's Law (Weak Scaling):</div>
+              <div>S(N) = (1 - P) + P × N = N - (1 - P)(N - 1)</div>
+              <div class="text-xs text-slate-400 mt-1">Expanding problem size. As processors grow, problem size scales so the serial fraction diminishes relative to total compute.</div>
+            </div>
+
+            <div class="p-3 bg-slate-900/60 rounded border border-slate-800 text-xs text-slate-300">
+              <span class="font-bold text-amber-300">Karp-Flatt Metric:</span> Quantifies experimental parallel code quality by extracting the empirically observed serial overhead \(e = \frac{1/S - 1/N}{1 - 1/N}\). An increasing \(e\) with core count pinpoints communication contention or lock serialization!
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ========================================================================= -->
+    <!-- TAB 3: FLYNN'S TAXONOMY                                                    -->
+    <!-- ========================================================================= -->
+    <section id="tab-flynn" class="module-section">
+      <div class="module-hero">
+        <div>
+          <h2>
+            <span>🏛️ Flynn's Taxonomy Architecture Visualizer</span>
+            <span class="badge-tag badge-parallel">Hardware Classification</span>
+          </h2>
+          <p>
+            Michael J. Flynn's 1966 classical taxonomy of computer architectures based on the multiplicity of Instruction Streams (IS) and Data Streams (DS).
+          </p>
+        </div>
+      </div>
+
+      <!-- Architecture selector pills -->
+      <div class="flex flex-wrap gap-2 mb-4">
+        <button class="flynn-type-btn px-4 py-2 rounded-lg font-mono text-xs border border-slate-700 bg-slate-900/80 hover:border-cyan-500 transition-all" data-mode="sisd">
+          SISD (Single Inst, Single Data)
+        </button>
+        <button class="flynn-type-btn active px-4 py-2 rounded-lg font-mono text-xs border border-cyan-500 bg-cyan-950/40 text-cyan-400 font-semibold" data-mode="simd">
+          SIMD (Single Inst, Multiple Data)
+        </button>
+        <button class="flynn-type-btn px-4 py-2 rounded-lg font-mono text-xs border border-slate-700 bg-slate-900/80 hover:border-cyan-500 transition-all" data-mode="misd">
+          MISD (Multiple Inst, Single Data)
+        </button>
+        <button class="flynn-type-btn px-4 py-2 rounded-lg font-mono text-xs border border-slate-700 bg-slate-900/80 hover:border-cyan-500 transition-all" data-mode="mimd">
+          MIMD (Multiple Inst, Multiple Data)
+        </button>
+      </div>
+
+      <!-- Canvas Stage & Architecture Specs -->
+      <div class="grid-2">
+        <div class="glass-panel p-4">
+          <div class="flex items-center justify-between mb-2">
+            <span class="text-xs font-mono uppercase text-slate-400">Pipeline Packet Simulation</span>
+            <div class="flex items-center gap-2">
+              <span class="text-[11px] font-mono text-slate-400">Speed</span>
+              <input id="flynn-speed-slider" type="range" min="0.2" max="2.5" step="0.1" value="1.0" class="w-20 accent-cyan-500">
+            </div>
+          </div>
+          <div class="vis-container">
+            <canvas id="flynn-canvas" class="vis-canvas"></canvas>
+          </div>
+        </div>
+
+        <div class="glass-panel p-6 flex flex-col justify-between">
+          <div>
+            <h3 id="flynn-info-title" class="text-lg font-bold text-cyan-400 mb-2">SIMD — Single Instruction, Multiple Data</h3>
+            <p id="flynn-info-desc" class="text-sm text-slate-300 leading-relaxed mb-4">
+              A single instruction is broadcast simultaneously across multiple processing elements, each operating on distinct data slices. Highly efficient for vector arithmetic and graphics.
+            </p>
+            <div id="flynn-info-example" class="p-3 bg-slate-900/80 rounded border border-slate-800 text-xs font-mono text-emerald-300 mb-4">
+              Real-World Exemplars: NVIDIA GPU Streaming Multiprocessors, AVX-512, ARM Neon
+            </div>
+
+            <div class="space-y-2 text-xs font-mono text-slate-400">
+              <div class="flex justify-between border-b border-slate-800 pb-1">
+                <span>Instruction Flow:</span>
+                <span class="text-slate-200">Broadcast Control Unit</span>
+              </div>
+              <div class="flex justify-between border-b border-slate-800 pb-1">
+                <span>Data Flow:</span>
+                <span class="text-slate-200">Parallel Vector Registers</span>
+              </div>
+              <div class="flex justify-between border-b border-slate-800 pb-1">
+                <span>Dominant Domain:</span>
+                <span class="text-slate-200">Deep Learning, Shaders, Linear Algebra</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ========================================================================= -->
+    <!-- TAB 4: DINING PHILOSOPHERS & DEADLOCK                                      -->
+    <!-- ========================================================================= -->
+    <section id="tab-philosophers" class="module-section">
+      <div class="module-hero">
+        <div>
+          <h2>
+            <span>🍝 Concurrency & Deadlocks: Dining Philosophers</span>
+            <span class="badge-tag badge-parallel">Mutual Exclusion</span>
+          </h2>
+          <p>
+            The quintessential concurrency problem formulated by Edsger Dijkstra. Witness mutual exclusion, resource contention, and live circular-wait cycle detection in the Resource Allocation Graph (RAG).
+          </p>
+        </div>
+      </div>
+
+      <!-- Controls Panel -->
+      <div class="glass-panel controls-card">
+        <div class="control-group">
+          <label>Concurrency Strategy</label>
+          <select id="philo-strategy" class="input-select">
+            <option value="naive">Naive (Deadlock Prone: Pick Left then Right)</option>
+            <option value="hierarchy">Dijkstra Resource Hierarchy (Numbered Forks)</option>
+            <option value="arbitrator">Arbitrator Waiter (Max N-1 Eaters Semaphore)</option>
+          </select>
+        </div>
+
+        <div class="flex items-center gap-2 pt-4 sm:pt-0">
+          <button id="philo-force-deadlock" class="btn-danger" title="Forces all 5 philosophers to reach for left fork simultaneously">
+            <span>⚡ Trigger Simultaneous Hunger (Deadlock)</span>
+          </button>
+          <button id="philo-toggle-play" class="btn-secondary">Pause</button>
+          <button id="philo-reset" class="btn-secondary">Reset Table</button>
+        </div>
+      </div>
+
+      <div id="philo-status-banner" class="mb-4">
+        <!-- Banner populated dynamically -->
+      </div>
+
+      <!-- Table Visualizer & Coffman Conditions -->
+      <div class="grid-2">
+        <div class="glass-panel p-4">
+          <div class="text-xs font-mono uppercase text-slate-400 mb-2">Round Table & Resource Allocation Graph (RAG)</div>
+          <div class="vis-container">
+            <canvas id="philosophers-canvas" class="vis-canvas"></canvas>
+          </div>
+        </div>
+
+        <div class="glass-panel p-6 flex flex-col justify-between">
+          <div>
+            <h3 class="text-base font-bold text-slate-200 mb-3">The 4 Coffman Deadlock Conditions</h3>
+            <p class="text-xs text-slate-400 mb-4">Deadlock occurs if and only if all four conditions hold simultaneously:</p>
+
+            <div class="space-y-2.5">
+              <div class="p-2.5 bg-slate-900/80 rounded border border-slate-800 text-xs">
+                <span class="font-bold text-cyan-400 font-mono">1. Mutual Exclusion:</span>
+                <span class="text-slate-300 ml-1">Forks cannot be shared; held by at most 1 philosopher.</span>
+              </div>
+              <div class="p-2.5 bg-slate-900/80 rounded border border-slate-800 text-xs">
+                <span class="font-bold text-cyan-400 font-mono">2. Hold and Wait:</span>
+                <span class="text-slate-300 ml-1">Philosophers hold one fork while blocked waiting for the other.</span>
+              </div>
+              <div class="p-2.5 bg-slate-900/80 rounded border border-slate-800 text-xs">
+                <span class="font-bold text-cyan-400 font-mono">3. No Preemption:</span>
+                <span class="text-slate-300 ml-1">Forks cannot be forcibly confiscated from eating philosophers.</span>
+              </div>
+              <div class="p-2.5 bg-slate-900/80 rounded border border-slate-800 text-xs">
+                <span class="font-bold text-rose-400 font-mono">4. Circular Wait:</span>
+                <span class="text-slate-300 ml-1">P₀ waits for F₁, P₁ waits for F₂ ... P₄ waits for F₀.</span>
+              </div>
+            </div>
+
+            <div class="mt-4 p-3 bg-slate-900/90 rounded border border-slate-800 flex justify-between items-center text-xs font-mono">
+              <span class="text-slate-400">RAG Cycle Status:</span>
+              <span id="rag-cycle-detected" class="text-emerald-400 font-semibold">No Cycles Detected</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ========================================================================= -->
+    <!-- TAB 5: RAFT CONSENSUS & NETWORK PARTITION                                  -->
+    <!-- ========================================================================= -->
+    <section id="tab-raft" class="module-section">
+      <div class="module-hero">
+        <div>
+          <h2>
+            <span>🗳️ Distributed Consensus: Raft Protocol</span>
+            <span class="badge-tag badge-distributed">Consensus & CAP</span>
+          </h2>
+          <p>
+            Simulates a 5-node distributed cluster maintaining a replicated state machine via leader elections, randomized heartbeat timeouts, majority quorums (\(\lfloor N/2 \rfloor + 1\)), and network partition split-brain resilience.
+          </p>
+        </div>
+      </div>
+
+      <!-- Controls Panel -->
+      <div class="glass-panel controls-card">
+        <div class="control-group">
+          <label>Client Command</label>
+          <input id="raft-cmd-input" type="text" value="SET user_balance = 500" class="input-text w-64">
+        </div>
+
+        <div class="flex items-center gap-2 pt-4 sm:pt-0">
+          <button id="raft-send-cmd" class="btn-primary">
+            <span>Send Write to Leader</span>
+          </button>
+          <button id="raft-toggle-partition" class="btn-danger">
+            <span>Split Network (Partition)</span>
+          </button>
+          <button id="raft-kill-leader" class="btn-secondary">
+            <span>Crash Leader</span>
+          </button>
+          <button id="raft-reset" class="btn-secondary">Reset Cluster</button>
+        </div>
+      </div>
+
+      <!-- HUD Metrics -->
+      <div class="grid-3 mb-4">
+        <div class="metric-box">
+          <span class="metric-label">Current Cluster Leader</span>
+          <span id="raft-current-leader" class="metric-val emerald">Detecting...</span>
+        </div>
+        <div class="metric-box">
+          <span class="metric-label">Quorum Requirement</span>
+          <span id="raft-quorum-status" class="metric-val purple">3 / 5 Majority</span>
+        </div>
+        <div class="metric-box">
+          <span class="metric-label">Partition State</span>
+          <span id="raft-partition-status" class="text-sm font-mono text-emerald-400 mt-3 font-semibold">Network Healthy</span>
+        </div>
+      </div>
+
+      <!-- Cluster Visualizer & Network RPC Log -->
+      <div class="grid-2">
+        <div class="glass-panel p-4">
+          <div class="text-xs font-mono uppercase text-slate-400 mb-2">Cluster Network Topology & In-Flight RPC Packets</div>
+          <div class="vis-container">
+            <canvas id="raft-canvas" class="vis-canvas"></canvas>
+          </div>
+        </div>
+
+        <div class="glass-panel p-4 flex flex-col h-[460px]">
+          <div class="text-xs font-mono uppercase text-slate-400 mb-2">Distributed Event & Consensus Log</div>
+          <div id="raft-event-log" class="flex-1 overflow-y-auto space-y-1 p-2 bg-slate-950/60 rounded border border-slate-800">
+            <!-- Event items populated dynamically -->
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ========================================================================= -->
+    <!-- TAB 6: CONSISTENT HASHING RING                                             -->
+    <!-- ========================================================================= -->
+    <section id="tab-hashing" class="module-section">
+      <div class="module-hero">
+        <div>
+          <h2>
+            <span>🌐 Consistent Hashing Ring Visualizer</span>
+            <span class="badge-tag badge-distributed">Distributed Storage</span>
+          </h2>
+          <p>
+            The foundational data partitioning technique behind Amazon DynamoDB, Apache Cassandra, and Discord voice gateways. Maps nodes and data keys to a 360° circular keyspace to minimize rebalancing when cluster topology changes.
+          </p>
+        </div>
+      </div>
+
+      <!-- Controls Panel -->
+      <div class="glass-panel controls-card">
+        <div class="control-group min-w-[200px]">
+          <div class="flex justify-between items-center mb-1">
+            <label>Virtual Nodes (Vnodes)</label>
+            <span id="hash-vnodes-val" class="text-xs font-mono text-cyan-400">3 Vnodes / Server</span>
+          </div>
+          <input id="hash-vnodes-slider" type="range" min="1" max="15" step="1" value="3" class="w-full accent-cyan-500">
+        </div>
+
+        <div class="flex items-center gap-2 pt-4 sm:pt-0">
+          <button id="hash-add-node" class="btn-primary">
+            <span>+ Add Server Node</span>
+          </button>
+          <button id="hash-remove-node" class="btn-danger">
+            <span>- Remove Node</span>
+          </button>
+          <button id="hash-add-key" class="btn-secondary">
+            <span>+ Insert Random Key</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Ring Canvas & Load Distribution Table -->
+      <div class="grid-2">
+        <div class="glass-panel p-4">
+          <div class="text-xs font-mono uppercase text-slate-400 mb-2">Hash Ring Keyspace (0 to 2³² - 1)</div>
+          <div class="vis-container">
+            <canvas id="hashing-canvas" class="vis-canvas"></canvas>
+          </div>
+        </div>
+
+        <div class="glass-panel p-5 flex flex-col justify-between">
+          <div>
+            <h3 class="text-base font-bold text-slate-200 mb-2">Per-Node Key Partition Distribution</h3>
+            <p class="text-xs text-slate-400 mb-3">Notice how virtual nodes (vnodes) smooth out the variance across servers:</p>
+
+            <div id="hash-node-list" class="space-y-2 mb-4">
+              <!-- Dynamically populated -->
+            </div>
+
+            <div class="p-3 bg-slate-900/80 rounded border border-slate-800 text-xs text-slate-300">
+              <span class="font-bold text-cyan-300">Why Modulo Hashing Fails:</span> With \(hash(k) \pmod N\), changing \(N \to N+1\) causes \(\approx \frac{N}{N+1}\) (up to 95%+) of all keys to move, triggering catastrophic cache stampedes. With Consistent Hashing, only \(\approx \frac{1}{N}\) of keys are redistributed!
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ========================================================================= -->
+    <!-- TAB 7: GOSSIP PROTOCOL                                                     -->
+    <!-- ========================================================================= -->
+    <section id="tab-gossip" class="module-section">
+      <div class="module-hero">
+        <div>
+          <h2>
+            <span>📡 Gossip / Epidemic Protocol Simulator</span>
+            <span class="badge-tag badge-distributed">P2P Dissemination</span>
+          </h2>
+          <p>
+            Simulates decentralized peer-to-peer rumor spreading (used in Consul, Serf, and Cassandra). Demonstrates exponential dissemination with \(O(\log N)\) rounds and resilience to high packet loss.
+          </p>
+        </div>
+      </div>
+
+      <!-- Controls Panel -->
+      <div class="glass-panel controls-card">
+        <div class="control-group min-w-[180px]">
+          <div class="flex justify-between items-center mb-1">
+            <label>Fanout (k)</label>
+            <span id="gossip-fanout-val" class="text-xs font-mono text-cyan-400">Fanout: 2 peers</span>
+          </div>
+          <input id="gossip-fanout-slider" type="range" min="1" max="4" step="1" value="2" class="w-full accent-cyan-500">
+        </div>
+
+        <div class="control-group min-w-[180px]">
+          <div class="flex justify-between items-center mb-1">
+            <label>Packet Loss Rate</label>
+            <span id="gossip-loss-val" class="text-xs font-mono text-rose-400">Packet Loss: 5%</span>
+          </div>
+          <input id="gossip-loss-slider" type="range" min="0" max="40" step="5" value="5" class="w-full accent-rose-500">
+        </div>
+
+        <div class="flex items-center gap-2 pt-4 sm:pt-0">
+          <button id="gossip-step-btn" class="btn-primary">
+            <span>Step 1 Gossip Round</span>
+          </button>
+          <button id="gossip-reset-btn" class="btn-secondary">Reset Mesh</button>
+        </div>
+      </div>
+
+      <!-- HUD Metrics -->
+      <div class="grid-2 mb-4">
+        <div class="metric-box">
+          <span class="metric-label">Current Gossip Round</span>
+          <span id="gossip-round-val" class="metric-val">Round 0</span>
+        </div>
+        <div class="metric-box">
+          <span class="metric-label">Cluster Infection Rate</span>
+          <span id="gossip-infected-val" class="metric-val emerald">2.8% (1/36)</span>
+        </div>
+      </div>
+
+      <!-- Mesh Topology & Epidemic S-Curve -->
+      <div class="grid-2">
+        <div class="glass-panel p-4">
+          <div class="text-xs font-mono uppercase text-slate-400 mb-2">Peer Network Mesh (36 Nodes)</div>
+          <div class="vis-container">
+            <canvas id="gossip-canvas" class="vis-canvas"></canvas>
+          </div>
+        </div>
+
+        <div class="glass-panel p-4">
+          <div class="text-xs font-mono uppercase text-slate-400 mb-2">Epidemic Dissemination S-Curve (% vs Rounds)</div>
+          <div class="h-[380px]">
+            <canvas id="gossip-chart"></canvas>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ========================================================================= -->
+    <!-- TAB 8: LAMPORT & VECTOR CLOCKS                                             -->
+    <!-- ========================================================================= -->
+    <section id="tab-clocks" class="module-section">
+      <div class="module-hero">
+        <div>
+          <h2>
+            <span>⏱️ Logical Time: Lamport & Vector Clocks</span>
+            <span class="badge-tag badge-distributed">Causality & Ordering</span>
+          </h2>
+          <p>
+            Physical wall clocks cannot be perfectly synchronized across distributed networks. Leslie Lamport's Logical Clocks and Vector Clocks define the "Happens-Before" (\(\rightarrow\)) partial order and detect concurrent events (\(\parallel\)).
+          </p>
+        </div>
+      </div>
+
+      <!-- Controls Panel -->
+      <div class="glass-panel controls-card">
+        <div class="flex flex-wrap gap-2">
+          <button class="add-local-event-btn btn-secondary text-xs" data-proc="0">+ Event P1</button>
+          <button class="add-local-event-btn btn-secondary text-xs" data-proc="1">+ Event P2</button>
+          <button class="add-local-event-btn btn-secondary text-xs" data-proc="2">+ Event P3</button>
+          <button id="clock-send-p1-p2" class="btn-primary text-xs">Send Msg: P1 → P2</button>
+          <button id="clock-send-p2-p3" class="btn-primary text-xs">Send Msg: P2 → P3</button>
+          <button id="clock-send-p3-p1" class="btn-primary text-xs">Send Msg: P3 → P1</button>
+          <button id="clocks-reset-btn" class="btn-secondary text-xs">Reset Timeline</button>
+        </div>
+      </div>
+
+      <!-- Timeline Canvas & Causality Evaluator -->
+      <div class="glass-panel p-4 mb-4">
+        <div class="text-xs font-mono uppercase text-slate-400 mb-2">Process Timelines (Click any two event dots to compare causality)</div>
+        <div class="vis-container">
+          <canvas id="clocks-canvas" class="vis-canvas"></canvas>
+        </div>
+      </div>
+
+      <div class="glass-panel p-5">
+        <div class="text-xs font-mono uppercase text-cyan-400 mb-2">Interactive Causality Evaluator</div>
+        <div id="clock-causality-detail" class="text-sm font-sans text-slate-300">
+          Click any two event dots on the timelines above to evaluate their causal relationship (Happens-Before vs Concurrent).
+        </div>
+      </div>
+    </section>
+
+    <!-- ========================================================================= -->
+    <!-- TAB 9: MAPREDUCE PIPELINE                                                  -->
+    <!-- ========================================================================= -->
+    <section id="tab-mapreduce" class="module-section">
+      <div class="module-hero">
+        <div>
+          <h2>
+            <span>🏭 MapReduce Distributed Compute Pipeline</span>
+            <span class="badge-tag badge-distributed">Batch Processing</span>
+          </h2>
+          <p>
+            The seminal distributed programming model pioneered by Jeffrey Dean and Sanjay Ghemawat. Step through Input Split, Map, Shuffle & Sort, and Reduce.
+          </p>
+        </div>
+      </div>
+
+      <!-- Controls Panel -->
+      <div class="glass-panel controls-card">
+        <div class="control-group flex-1 min-w-[280px]">
+          <label>Corpus Input Sentence</label>
+          <input id="mr-input-text" type="text" value="deer bear river car car river deer deer" class="input-text w-full">
+        </div>
+
+        <div class="flex items-center gap-2 pt-4 sm:pt-0">
+          <button id="mr-step-btn" class="btn-primary">
+            <span>Next Stage ➔</span>
+          </button>
+          <button id="mr-reset-btn" class="btn-secondary">Reset Pipeline</button>
+        </div>
+      </div>
+
+      <div id="mr-stage-label" class="p-3 mb-4 rounded-lg bg-cyan-950/40 border border-cyan-800 text-cyan-300 font-mono text-xs font-semibold">
+        Current Stage: 1. Input Data Split
+      </div>
+
+      <div id="mr-visualizer-container" class="space-y-4">
+        <!-- Rendered dynamically -->
+      </div>
+    </section>
+
+    <!-- ========================================================================= -->
+    <!-- TAB 10: PDC KNOWLEDGE ATLAS & SEARCHABLE ENCYCLOPEDIA                      -->
+    <!-- ========================================================================= -->
+    <section id="tab-atlas" class="module-section">
+      <div class="module-hero">
+        <div>
+          <h2>
+            <span>📖 Parallel & Distributed Computing Knowledge Atlas</span>
+            <span class="badge-tag badge-theory">Encyclopedia</span>
+          </h2>
+          <p>
+            A comprehensive reference covering the core theoretical theorems, synchronization primitives, hardware models, and consensus algorithms that define modern distributed systems and high-performance computing.
+          </p>
+        </div>
+      </div>
+
+      <!-- Search & Filters -->
+      <div class="glass-panel p-4 mb-6 flex flex-wrap gap-4 items-center justify-between">
+        <div class="flex-1 min-w-[260px]">
+          <input id="atlas-search-input" type="text" placeholder="Search concepts, algorithms, formulas (e.g. CAP, CRDT, Amdahl, Raft)..." class="input-text w-full">
+        </div>
+
+        <div class="flex flex-wrap gap-2">
+          <button class="atlas-filter-btn active px-3 py-1.5 rounded-lg font-mono text-xs border border-cyan-500 bg-cyan-950/40 text-cyan-400" data-cat="all">All Concepts</button>
+          <button class="atlas-filter-btn px-3 py-1.5 rounded-lg font-mono text-xs border border-slate-700 bg-slate-900 text-slate-300" data-cat="parallel">Parallel Arch</button>
+          <button class="atlas-filter-btn px-3 py-1.5 rounded-lg font-mono text-xs border border-slate-700 bg-slate-900 text-slate-300" data-cat="concurrency">Concurrency</button>
+          <button class="atlas-filter-btn px-3 py-1.5 rounded-lg font-mono text-xs border border-slate-700 bg-slate-900 text-slate-300" data-cat="consensus">Consensus</button>
+          <button class="atlas-filter-btn px-3 py-1.5 rounded-lg font-mono text-xs border border-slate-700 bg-slate-900 text-slate-300" data-cat="distributed">Storage & CAP</button>
+          <button class="atlas-filter-btn px-3 py-1.5 rounded-lg font-mono text-xs border border-slate-700 bg-slate-900 text-slate-300" data-cat="bigdata">Big Data</button>
+        </div>
+      </div>
+
+      <!-- Grid of Atlas Cards -->
+      <div id="atlas-cards-grid" class="grid-3">
+        <!-- Rendered dynamically -->
+      </div>
+    </section>
+
+  </main>
+
+  <!-- App Footer -->
+  <footer class="app-footer">
+    <div class="footer-links">
+      <a href="#benchmarks">Multi-Core Benchmark</a>
+      <a href="#amdahl">Amdahl & Gustafson</a>
+      <a href="#raft">Raft Consensus</a>
+      <a href="#hashing">Consistent Hashing</a>
+      <a href="#atlas">Knowledge Atlas</a>
+    </div>
+    <p>DistriLab — Designed for Parallel & Distributed Computing exploration. Client-side, zero-backend, 100% GitHub Pages ready.</p>
+  </footer>
+
+  <!-- App Main Module -->
+  <script type="module" src="js/app.js"></script>
+</body>
+</html>
