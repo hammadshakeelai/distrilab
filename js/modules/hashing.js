@@ -42,7 +42,7 @@ export class ConsistentHashingModule {
       hash = ((hash << 5) + hash) + str.charCodeAt(i);
       hash = hash & hash;
     }
-    return Math.abs(hash);
+    return (hash >>> 0);
   }
 
   initDefaultCluster() {

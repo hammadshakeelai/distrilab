@@ -122,7 +122,7 @@
       <!-- Controls Panel -->
       <div class="glass-panel controls-card">
         <div class="control-group">
-          <label>Workload Algorithm</label>
+          <label for="bench-workload">Workload Algorithm</label>
           <select id="bench-workload" class="input-select">
             <option value="pi">Monte Carlo π Estimation (Stochastic Embarrassingly Parallel)</option>
             <option value="mandelbrot" selected>Mandelbrot Fractal Slicing (Load-Imbalanced Parallel)</option>
@@ -131,14 +131,14 @@
         </div>
 
         <div class="control-group">
-          <label>Worker Threads (p)</label>
+          <label for="bench-threads">Worker Threads (p)</label>
           <select id="bench-threads" class="input-select">
             <!-- Populated dynamically based on navigator.hardwareConcurrency -->
           </select>
         </div>
 
         <div class="control-group">
-          <label>Intensity / Problem Size</label>
+          <label for="bench-intensity">Intensity / Problem Size</label>
           <select id="bench-intensity" class="input-select">
             <option value="1">Standard (Fast)</option>
             <option value="2" selected>Medium (Recommended)</option>
@@ -248,7 +248,7 @@
         </div>
 
         <div class="control-group">
-          <label>Scaling Domain Ceiling</label>
+          <label for="amdahl-range-select">Scaling Domain Ceiling</label>
           <select id="amdahl-range-select" class="input-select">
             <option value="64">Up to 64 Processors</option>
             <option value="128" selected>Up to 128 Processors</option>
@@ -406,7 +406,7 @@
       <!-- Controls Panel -->
       <div class="glass-panel controls-card">
         <div class="control-group">
-          <label>Concurrency Strategy</label>
+          <label for="philo-strategy">Concurrency Strategy</label>
           <select id="philo-strategy" class="input-select">
             <option value="naive">Naive (Deadlock Prone: Pick Left then Right)</option>
             <option value="hierarchy">Dijkstra Resource Hierarchy (Numbered Forks)</option>
@@ -417,6 +417,9 @@
         <div class="flex items-center gap-2 pt-4 sm:pt-0">
           <button id="philo-force-deadlock" class="btn-danger" title="Forces all 5 philosophers to reach for left fork simultaneously">
             <span>⚡ Trigger Simultaneous Hunger (Deadlock)</span>
+          </button>
+          <button id="philo-preempt-btn" class="btn-secondary text-amber-300 border-amber-500/40 hover:bg-amber-950/40" title="OS Victim Selection: preempt resource to break circular wait">
+            <span>⚡ Preempt Resource</span>
           </button>
           <button id="philo-toggle-play" class="btn-secondary">Pause</button>
           <button id="philo-reset" class="btn-secondary">Reset Table</button>
@@ -488,7 +491,7 @@
       <!-- Controls Panel -->
       <div class="glass-panel controls-card">
         <div class="control-group">
-          <label>Client Command</label>
+          <label for="raft-cmd-input">Client Command</label>
           <input id="raft-cmd-input" type="text" value="SET user_balance = 500" class="input-text w-64">
         </div>
 
@@ -501,6 +504,9 @@
           </button>
           <button id="raft-kill-leader" class="btn-secondary">
             <span>Crash Leader</span>
+          </button>
+          <button id="raft-revive-nodes" class="btn-secondary text-emerald-300 border-emerald-500/40 hover:bg-emerald-950/40">
+            <span>💚 Revive Nodes</span>
           </button>
           <button id="raft-reset" class="btn-secondary">Reset Cluster</button>
         </div>
@@ -560,7 +566,7 @@
       <div class="glass-panel controls-card">
         <div class="control-group min-w-[200px]">
           <div class="flex justify-between items-center mb-1">
-            <label>Virtual Nodes (Vnodes)</label>
+            <label for="hash-vnodes-slider">Virtual Nodes (Vnodes)</label>
             <span id="hash-vnodes-val" class="text-xs font-mono text-cyan-400">3 Vnodes / Server</span>
           </div>
           <input id="hash-vnodes-slider" type="range" min="1" max="15" step="1" value="3" class="w-full accent-cyan-500">
@@ -625,7 +631,7 @@
       <div class="glass-panel controls-card">
         <div class="control-group min-w-[180px]">
           <div class="flex justify-between items-center mb-1">
-            <label>Fanout (k)</label>
+            <label for="gossip-fanout-slider">Fanout (k)</label>
             <span id="gossip-fanout-val" class="text-xs font-mono text-cyan-400">Fanout: 2 peers</span>
           </div>
           <input id="gossip-fanout-slider" type="range" min="1" max="4" step="1" value="2" class="w-full accent-cyan-500">
@@ -633,7 +639,7 @@
 
         <div class="control-group min-w-[180px]">
           <div class="flex justify-between items-center mb-1">
-            <label>Packet Loss Rate</label>
+            <label for="gossip-loss-slider">Packet Loss Rate</label>
             <span id="gossip-loss-val" class="text-xs font-mono text-rose-400">Packet Loss: 5%</span>
           </div>
           <input id="gossip-loss-slider" type="range" min="0" max="40" step="5" value="5" class="w-full accent-rose-500">
@@ -642,6 +648,9 @@
         <div class="flex items-center gap-2 pt-4 sm:pt-0">
           <button id="gossip-step-btn" class="btn-primary">
             <span>Step 1 Gossip Round</span>
+          </button>
+          <button id="gossip-auto-btn" class="btn-secondary">
+            <span>Auto Disseminate</span>
           </button>
           <button id="gossip-reset-btn" class="btn-secondary">Reset Mesh</button>
         </div>
@@ -740,9 +749,27 @@
 
       <!-- Controls Panel -->
       <div class="glass-panel controls-card">
-        <div class="control-group flex-1 min-w-[280px]">
-          <label>Corpus Input Sentence</label>
+        <div class="control-group flex-1 min-w-[240px]">
+          <label for="mr-input-text">Corpus Input Sentence</label>
           <input id="mr-input-text" type="text" value="deer bear river car car river deer deer" class="input-text w-full">
+        </div>
+
+        <div class="control-group">
+          <label for="mr-mappers-select">Mappers</label>
+          <select id="mr-mappers-select" class="input-select">
+            <option value="2" selected>2 Mappers</option>
+            <option value="3">3 Mappers</option>
+            <option value="4">4 Mappers</option>
+          </select>
+        </div>
+
+        <div class="control-group">
+          <label for="mr-reducers-select">Reducers</label>
+          <select id="mr-reducers-select" class="input-select">
+            <option value="2" selected>2 Reducers</option>
+            <option value="3">3 Reducers</option>
+            <option value="4">4 Reducers</option>
+          </select>
         </div>
 
         <div class="flex items-center gap-2 pt-4 sm:pt-0">
@@ -781,7 +808,7 @@
       <!-- Search & Filters -->
       <div class="glass-panel p-4 mb-6 flex flex-wrap gap-4 items-center justify-between">
         <div class="flex-1 min-w-[260px]">
-          <input id="atlas-search-input" type="text" placeholder="Search concepts, algorithms, formulas (e.g. CAP, CRDT, Amdahl, Raft)..." class="input-text w-full">
+          <input id="atlas-search-input" type="text" aria-label="Search PDC concepts and formulas" placeholder="Search concepts, algorithms, formulas (e.g. CAP, CRDT, Amdahl, Raft)..." class="input-text w-full">
         </div>
 
         <div class="flex flex-wrap gap-2">

@@ -264,9 +264,20 @@ export class FlynnModule {
     }
   }
 
-  destroy() {
+  pause() {
     if (this.animationId) {
       cancelAnimationFrame(this.animationId);
+      this.animationId = null;
     }
+  }
+
+  resume() {
+    if (!this.animationId) {
+      this.startAnimation();
+    }
+  }
+
+  destroy() {
+    this.pause();
   }
 }

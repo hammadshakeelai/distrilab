@@ -135,6 +135,46 @@ export class AtlasModule {
         tags: ['Distributed Transactions', 'ACID', 'Atomicity'],
         summary: 'An atomic commitment protocol for distributed databases. A Coordinator coordinates Cohorts across Phase 1 (Prepare: can you commit?) and Phase 2 (Commit or Abort). A major limitation is that 2PC is a blocking protocol: if the coordinator crashes while holding locks, cohorts remain indefinitely blocked.',
         formula: 'Unanimous YES in Prepare ⟹ Global Commit; Else ⟹ Global Abort'
+      },
+      {
+        id: 'two-generals-problem',
+        category: 'distributed',
+        title: 'Two Generals\' Problem',
+        tags: ['Distributed Systems', 'Impossibility', 'Unreliable Network'],
+        summary: 'A thought experiment illustrating the impossibility of two parties reaching common knowledge and guaranteed coordination over an unreliable communications channel with message loss. Proves that no finite number of acknowledgments can guarantee consensus when packets can be dropped.',
+        formula: 'No finite protocol exists to guarantee consensus over lossy channels'
+      },
+      {
+        id: 'spanner-truetime',
+        category: 'distributed',
+        title: 'Google Spanner & TrueTime API',
+        tags: ['External Consistency', 'Atomic Clocks', 'GPS'],
+        summary: 'Google\'s globally-distributed, synchronously-replicated SQL database. TrueTime bounds clock uncertainty [earliest, latest] using atomic clocks and GPS receivers in every datacenter. Allows transactions to commit with commit-wait to guarantee strict external serializability worldwide.',
+        formula: 'commitWait() ensures T_commit > latest(start_time)'
+      },
+      {
+        id: 'actor-model',
+        category: 'concurrency',
+        title: 'Actor Model of Concurrency',
+        tags: ['Message Passing', 'Erlang', 'Fault Tolerance'],
+        summary: 'A mathematical model of concurrent computation where \'actors\' are primitive units. In response to a message, an actor can: 1) send finite messages to other actors, 2) create finite new actors, 3) designate the behavior for the next message. Eliminates mutex contention and deadlocks.',
+        formula: 'Share nothing; communicate strictly via asynchronous mailboxes'
+      },
+      {
+        id: 'mesi-protocol',
+        category: 'parallel',
+        title: 'MESI Cache Coherence Protocol',
+        tags: ['Hardware Cache', 'SMP', 'Bus Snooping'],
+        summary: 'An invalidation-based cache coherence protocol widely used in multi-core CPUs. Every cache line resides in one of four states: Modified (dirty, only in this cache), Exclusive (clean, only in this cache), Shared (clean, may be in multiple caches), or Invalid (not present/stale).',
+        formula: 'States: Modified (M), Exclusive (E), Shared (S), Invalid (I)'
+      },
+      {
+        id: 'bsp-model',
+        category: 'parallel',
+        title: 'Bulk Synchronous Parallel (BSP)',
+        tags: ['Parallel Algorithms', 'Valiant', 'Supersteps'],
+        summary: 'A bridging model for parallel computing introduced by Leslie Valiant. Programs execute in discrete \'supersteps\' consisting of three phases: 1) Concurrent local computation, 2) Global communication, 3) Barrier synchronization. Used in Apache Giraph and graph computing.',
+        formula: 'Superstep = Local Computation + Communication + Barrier Sync'
       }
     ];
   }

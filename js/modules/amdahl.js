@@ -180,7 +180,10 @@ export class AmdahlModule {
     const amdahlData = processorPoints.map(p => +(1 / (S_seq + P / p)).toFixed(2));
     const gustafsonData = processorPoints.map(p => +(S_seq + P * p).toFixed(2));
     const linearData = processorPoints.map(p => p);
-    const ceilingData = processorPoints.map(() => +amdahlMax.toFixed(2));
+    
+    // Only display ceiling line if it is within reasonable scaling range of the current processor domain
+    const isCeilingVisible = amdahlMax <= this.maxProcessors * 1.25;
+    const ceilingData = isCeilingVisible ? processorPoints.map(() => +amdahlMax.toFixed(2)) : [];
 
     if (this.chart) {
       this.chart.data.labels = processorPoints;
@@ -188,6 +191,11 @@ export class AmdahlModule {
       this.chart.data.datasets[1].data = gustafsonData;
       this.chart.data.datasets[2].data = linearData;
       this.chart.data.datasets[3].data = ceilingData;
+      this.chart.data.datasets[3].hidden = !isCeilingVisible;
+      
+      // Auto-scale Y-axis gracefully
+      const maxPlotY = Math.max(gustafsonData[gustafsonData.length - 1], isCeilingVisible ? amdahlMax : amdahlData[amdahlData.length - 1]);
+      this.chart.options.scales.y.max = Math.ceil(maxPlotY * 1.05);
       this.chart.update('none');
     }
   }

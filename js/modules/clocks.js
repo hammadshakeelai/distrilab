@@ -38,6 +38,7 @@ export class ClocksModule {
     const rect = this.canvas.parentElement.getBoundingClientRect();
     this.canvas.width = rect.width || 750;
     this.canvas.height = 360;
+    this.relayoutEvents();
     this.draw();
   }
 
@@ -82,14 +83,20 @@ export class ClocksModule {
     if (resetBtn) resetBtn.addEventListener('click', () => { this.resetDemo(); this.draw(); });
   }
 
-  getNextX() {
-    const margin = 100;
-    const lastX = this.events.length > 0 ? Math.max(...this.events.map(e => e.x)) : margin;
-    return Math.min(this.canvas.width - 50, lastX + 65);
+  relayoutEvents() {
+    if (!this.canvas || this.events.length === 0) return;
+    const count = this.events.length;
+    const startX = 120;
+    const endX = this.canvas.width - 60;
+    const step = count > 1 ? (endX - startX) / (count - 1) : 0;
+
+    this.events.forEach((ev, idx) => {
+      ev.x = startX + idx * step;
+    });
   }
 
   addLocalEvent(procId) {
-    if (this.events.length >= 12) return;
+    if (this.events.length >= 16) return;
     const p = this.processes[procId];
     p.lamport += 1;
     p.vector[procId] += 1;
@@ -97,17 +104,18 @@ export class ClocksModule {
     const event = {
       id: this.events.length + 1,
       procId,
-      x: this.getNextX(),
+      x: 0,
       lamport: p.lamport,
       vector: [...p.vector],
       label: `e${this.events.length + 1}`
     };
 
     this.events.push(event);
+    this.relayoutEvents();
   }
 
   sendMessage(fromProcId, toProcId) {
-    if (this.events.length >= 11) return;
+    if (this.events.length >= 15) return;
     const sender = this.processes[fromProcId];
     sender.lamport += 1;
     sender.vector[fromProcId] += 1;
@@ -115,7 +123,7 @@ export class ClocksModule {
     const sendEvent = {
       id: this.events.length + 1,
       procId: fromProcId,
-      x: this.getNextX(),
+      x: 0,
       lamport: sender.lamport,
       vector: [...sender.vector],
       label: `send(${sendEventIdToLetter(fromProcId, toProcId)})`
@@ -133,7 +141,7 @@ export class ClocksModule {
     const recvEvent = {
       id: this.events.length + 1,
       procId: toProcId,
-      x: this.getNextX() + 45,
+      x: 0,
       lamport: receiver.lamport,
       vector: [...receiver.vector],
       label: `recv`
@@ -144,18 +152,23 @@ export class ClocksModule {
       fromId: sendEvent.id,
       toId: recvEvent.id
     });
+
+    this.relayoutEvents();
   }
 
   handleCanvasClick(e) {
+    if (!this.canvas) return;
     const rect = this.canvas.getBoundingClientRect();
-    const clickX = e.clientX - rect.left;
-    const clickY = e.clientY - rect.top;
+    const scaleX = this.canvas.width / rect.width;
+    const scaleY = this.canvas.height / rect.height;
+    const clickX = (e.clientX - rect.left) * scaleX;
+    const clickY = (e.clientY - rect.top) * scaleY;
 
-    // Check if clicked near an event
+    // Check if clicked near an event (generous target for mobile/mouse)
     const found = this.events.find(ev => {
       const y = this.getYForProc(ev.procId);
       const dist = Math.hypot(clickX - ev.x, clickY - y);
-      return dist <= 18;
+      return dist <= 24;
     });
 
     if (found) {

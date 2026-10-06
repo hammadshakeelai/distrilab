@@ -5,10 +5,11 @@
 
 export class BenchmarkModule {
   constructor() {
-    this.workers = [];
+    this.activeWorkers = [];
     this.maxHardwareThreads = navigator.hardwareConcurrency || 4;
     this.chart = null;
     this.isRunning = false;
+    this.sweepCancelled = false;
     this.benchmarkData = [];
   }
 
@@ -237,6 +238,7 @@ export class BenchmarkModule {
 
   async runScalingSweep() {
     if (this.isRunning) return;
+    this.sweepCancelled = false;
     const sweepThreadCounts = [1, 2, 4, 8].filter(n => n <= Math.max(8, this.maxHardwareThreads));
     if (!sweepThreadCounts.includes(this.maxHardwareThreads) && this.maxHardwareThreads <= 16) {
       sweepThreadCounts.push(this.maxHardwareThreads);
@@ -251,12 +253,24 @@ export class BenchmarkModule {
     }
 
     for (const threads of sweepThreadCounts) {
+      if (this.sweepCancelled) break;
       await this.runBenchmark(threads);
+      if (this.sweepCancelled) break;
       await new Promise(r => setTimeout(r, 400));
     }
 
     const progressEl = document.getElementById('bench-status');
-    if (progressEl) progressEl.textContent = `Sweep Complete across ${sweepThreadCounts.join(', ')} threads!`;
+    if (progressEl && !this.sweepCancelled) {
+      progressEl.textContent = `Sweep Complete across ${sweepThreadCounts.join(', ')} threads!`;
+    }
+  }
+
+  cleanupWorkers(workers) {
+    workers.forEach(w => {
+      try { w.terminate(); } catch (e) {}
+      const idx = this.activeWorkers.indexOf(w);
+      if (idx !== -1) this.activeWorkers.splice(idx, 1);
+    });
   }
 
   runParallelPi(threads, totalSamples) {
@@ -270,6 +284,7 @@ export class BenchmarkModule {
         this.updateCoreStatus(i, 'active', `${Math.round(samplesPerThread / 1000)}k pts`);
         const worker = new Worker('js/workers/benchmark-worker.js');
         workers.push(worker);
+        this.activeWorkers.push(worker);
 
         worker.onmessage = (e) => {
           const { duration, result } = e.data;
@@ -278,7 +293,7 @@ export class BenchmarkModule {
           this.updateCoreStatus(i, 'done', `${duration.toFixed(0)} ms`);
 
           if (completed === threads) {
-            workers.forEach(w => w.terminate());
+            this.cleanupWorkers(workers);
             const piEstimate = (4 * totalInside) / totalSamples;
             resolve({
               type: 'pi',
@@ -289,7 +304,7 @@ export class BenchmarkModule {
         };
 
         worker.onerror = (err) => {
-          workers.forEach(w => w.terminate());
+          this.cleanupWorkers(workers);
           reject(err);
         };
 
@@ -322,6 +337,7 @@ export class BenchmarkModule {
         this.updateCoreStatus(i, 'active', `Rows ${startRow}-${endRow}`);
         const worker = new Worker('js/workers/benchmark-worker.js');
         workers.push(worker);
+        this.activeWorkers.push(worker);
 
         worker.onmessage = (e) => {
           const { duration, result } = e.data;
@@ -336,13 +352,13 @@ export class BenchmarkModule {
           this.updateCoreStatus(i, 'done', `${duration.toFixed(0)} ms`);
 
           if (completed === threads) {
-            workers.forEach(w => w.terminate());
+            this.cleanupWorkers(workers);
             resolve({ type: 'mandelbrot', resolution: `${width}x${height}` });
           }
         };
 
         worker.onerror = (err) => {
-          workers.forEach(w => w.terminate());
+          this.cleanupWorkers(workers);
           reject(err);
         };
 
@@ -385,6 +401,7 @@ export class BenchmarkModule {
         this.updateCoreStatus(i, 'active', `Rows ${startRow}-${endRow}`);
         const worker = new Worker('js/workers/benchmark-worker.js');
         workers.push(worker);
+        this.activeWorkers.push(worker);
 
         worker.onmessage = (e) => {
           const { duration } = e.data;
@@ -392,13 +409,13 @@ export class BenchmarkModule {
           this.updateCoreStatus(i, 'done', `${duration.toFixed(0)} ms`);
 
           if (completed === threads) {
-            workers.forEach(w => w.terminate());
+            this.cleanupWorkers(workers);
             resolve({ type: 'matrix', size: `${n}x${n}` });
           }
         };
 
         worker.onerror = (err) => {
-          workers.forEach(w => w.terminate());
+          this.cleanupWorkers(workers);
           reject(err);
         };
 
@@ -473,6 +490,13 @@ export class BenchmarkModule {
   }
 
   resetBenchmark() {
+    this.sweepCancelled = true;
+    this.isRunning = false;
+    this.activeWorkers.forEach(w => {
+      try { w.terminate(); } catch (e) {}
+    });
+    this.activeWorkers = [];
+
     this.benchmarkData = [];
     if (this.chart) {
       this.chart.data.labels = [];
@@ -485,6 +509,7 @@ export class BenchmarkModule {
     document.getElementById('metric-efficiency').textContent = '--';
     document.getElementById('metric-result-detail').textContent = 'Ready to launch';
     document.getElementById('bench-status').textContent = 'Ready';
+    this.toggleButtons(true);
   }
 
   toggleButtons(enable) {

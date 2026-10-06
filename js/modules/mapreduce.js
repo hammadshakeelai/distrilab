@@ -40,6 +40,26 @@ export class MapReduceModule {
       });
     }
 
+    const mappersSelect = document.getElementById('mr-mappers-select');
+    if (mappersSelect) {
+      mappersSelect.addEventListener('change', (e) => {
+        this.numMappers = parseInt(e.target.value, 10);
+        this.stage = 0;
+        this.computePipeline();
+        this.render();
+      });
+    }
+
+    const reducersSelect = document.getElementById('mr-reducers-select');
+    if (reducersSelect) {
+      reducersSelect.addEventListener('change', (e) => {
+        this.numReducers = parseInt(e.target.value, 10);
+        this.stage = 0;
+        this.computePipeline();
+        this.render();
+      });
+    }
+
     const inputField = document.getElementById('mr-input-text');
     if (inputField) {
       inputField.addEventListener('input', (e) => {

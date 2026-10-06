@@ -92,6 +92,13 @@ class App {
 
   switchTab(tabId) {
     if (!document.getElementById(`tab-${tabId}`)) return;
+    
+    // Pause previous active module animation
+    const prevMod = this.modules[this.activeTab];
+    if (prevMod && typeof prevMod.pause === 'function') {
+      prevMod.pause();
+    }
+
     this.activeTab = tabId;
 
     // Update nav buttons
@@ -112,6 +119,12 @@ class App {
       }
     });
 
+    // Resume new active module animation
+    const nextMod = this.modules[tabId];
+    if (nextMod && typeof nextMod.resume === 'function') {
+      nextMod.resume();
+    }
+
     // Trigger canvas resize & chart redraw if necessary
     setTimeout(() => {
       window.dispatchEvent(new Event('resize'));
@@ -124,4 +137,14 @@ document.addEventListener('DOMContentLoaded', () => {
   const app = new App();
   app.init();
   window.distriLabApp = app;
+
+  // Window visibility management for background battery savings
+  document.addEventListener('visibilitychange', () => {
+    const curMod = app.modules[app.activeTab];
+    if (document.hidden) {
+      if (curMod && typeof curMod.pause === 'function') curMod.pause();
+    } else {
+      if (curMod && typeof curMod.resume === 'function') curMod.resume();
+    }
+  });
 });

@@ -89,6 +89,36 @@ export class PhilosophersModule {
         playPauseBtn.textContent = this.isRunning ? 'Pause' : 'Resume';
       });
     }
+
+    const preemptBtn = document.getElementById('philo-preempt-btn');
+    if (preemptBtn) {
+      preemptBtn.addEventListener('click', () => this.breakDeadlockWithPreemption());
+    }
+  }
+
+  breakDeadlockWithPreemption() {
+    if (!this.isDeadlocked) return;
+    // OS Victim Selection: Force Philosopher 0 to yield resources & back off
+    const victim = this.philosophers[0];
+    victim.heldForks.forEach(fId => {
+      this.forks[fId].heldBy = null;
+    });
+    victim.heldForks = [];
+    victim.waitingForFork = null;
+    victim.state = 'thinking';
+    victim.timer = 150; // Exponential backoff timer
+
+    this.isDeadlocked = false;
+    const banner = document.getElementById('philo-status-banner');
+    if (banner) {
+      banner.textContent = `⚡ OS PREEMPTION: Broken circular wait by preempting ${victim.name}'s fork. Remaining philosophers progressing!`;
+      banner.className = 'p-3 rounded-lg bg-amber-950/60 border border-amber-500/60 text-amber-300 font-mono text-xs font-semibold';
+    }
+    const ragCycle = document.getElementById('rag-cycle-detected');
+    if (ragCycle) {
+      ragCycle.textContent = 'Cycle Broken via Preemption';
+      ragCycle.className = 'text-amber-400 font-semibold';
+    }
   }
 
   forceSimultaneousHunger() {
@@ -377,9 +407,20 @@ export class PhilosophersModule {
     }
   }
 
-  destroy() {
+  pause() {
     if (this.animationId) {
       cancelAnimationFrame(this.animationId);
+      this.animationId = null;
     }
+  }
+
+  resume() {
+    if (!this.animationId) {
+      this.startLoop();
+    }
+  }
+
+  destroy() {
+    this.pause();
   }
 }

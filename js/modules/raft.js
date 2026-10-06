@@ -84,27 +84,48 @@ export class RaftModule {
       killLeaderBtn.addEventListener('click', () => this.killCurrentLeader());
     }
 
+    const reviveBtn = document.getElementById('raft-revive-nodes');
+    if (reviveBtn) {
+      reviveBtn.addEventListener('click', () => this.reviveAllNodes());
+    }
+
     const resetBtn = document.getElementById('raft-reset');
     if (resetBtn) {
       resetBtn.addEventListener('click', () => this.initCluster());
     }
   }
 
+  reviveAllNodes() {
+    let count = 0;
+    this.nodes.forEach(n => {
+      if (!n.alive) {
+        n.alive = true;
+        n.role = 'follower';
+        n.electionTimer = 0;
+        count++;
+      }
+    });
+    this.logEvent(`💚 Revived ${count} crashed node(s). Normal election cycles restored.`);
+    this.updateUI();
+  }
+
   submitClientCommand(cmd) {
     const leaders = this.nodes.filter(n => n.role === 'leader' && n.alive);
     if (leaders.length === 0) {
-      this.logEvent('Client write failed: No active leader in cluster!');
+      this.logEvent('⚠️ Client write failed: No active leader in cluster! Waiting for leader election.');
       return;
     }
 
-    // Submit to leader
-    const leader = leaders[0];
-    const entry = { term: leader.term, cmd, committed: false, acks: [leader.id] };
-    leader.log.push(entry);
-    this.logEvent(`Client submitted "${cmd}" to ${leader.name} (Term ${leader.term})`);
+    // Submit to active leader(s) - in a partition, this tests both minority & majority groups
+    leaders.forEach(leader => {
+      const entry = { term: leader.term, cmd, committed: false, acks: [leader.id] };
+      leader.log.push(entry);
+      const grpTag = this.partitionActive ? (leader.partitionGroup === 0 ? ' [Minority Group A]' : ' [Majority Group B]') : '';
+      this.logEvent(`Client write "${cmd}" sent to ${leader.name}${grpTag} (Term ${leader.term})`);
 
-    // Broadcast AppendEntries to reachable followers
-    this.broadcastAppendEntries(leader, entry);
+      // Broadcast AppendEntries to reachable followers
+      this.broadcastAppendEntries(leader, entry);
+    });
     this.updateUI();
   }
 
@@ -512,9 +533,20 @@ export class RaftModule {
     }
   }
 
-  destroy() {
+  pause() {
     if (this.animationId) {
       cancelAnimationFrame(this.animationId);
+      this.animationId = null;
     }
+  }
+
+  resume() {
+    if (!this.animationId) {
+      this.startLoop();
+    }
+  }
+
+  destroy() {
+    this.pause();
   }
 }
