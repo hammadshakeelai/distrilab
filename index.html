@@ -227,7 +227,7 @@
       <div class="glass-panel controls-card">
         <div class="control-group min-w-[240px]">
           <div class="flex justify-between items-center mb-1">
-            <label>Parallel Fraction (P)</label>
+            <label for="amdahl-fraction-slider">Parallel Fraction (P)</label>
             <span id="amdahl-fraction-val" class="text-xs font-mono text-cyan-400">90.0%</span>
           </div>
           <input id="amdahl-fraction-slider" type="range" min="0.50" max="0.999" step="0.005" value="0.90" class="w-full accent-cyan-500">
@@ -241,7 +241,7 @@
 
         <div class="control-group min-w-[200px]">
           <div class="flex justify-between items-center mb-1">
-            <label>Evaluated Cores (N)</label>
+            <label for="amdahl-n-slider">Evaluated Cores (N)</label>
             <span id="amdahl-n-val" class="text-xs font-mono text-emerald-400">16 Cores</span>
           </div>
           <input id="amdahl-n-slider" type="range" min="1" max="128" step="1" value="16" class="w-full accent-emerald-500">
@@ -349,7 +349,7 @@
           <div class="flex items-center justify-between mb-2">
             <span class="text-xs font-mono uppercase text-slate-400">Pipeline Packet Simulation</span>
             <div class="flex items-center gap-2">
-              <span class="text-[11px] font-mono text-slate-400">Speed</span>
+              <label for="flynn-speed-slider" class="text-[11px] font-mono text-slate-400">Speed</label>
               <input id="flynn-speed-slider" type="range" min="0.2" max="2.5" step="0.1" value="1.0" class="w-20 accent-cyan-500">
             </div>
           </div>

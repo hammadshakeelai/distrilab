@@ -11,6 +11,22 @@ export class BenchmarkModule {
     this.isRunning = false;
     this.sweepCancelled = false;
     this.benchmarkData = [];
+    this._workerBlobUrl = null;
+  }
+
+  createWorker() {
+    try {
+      if (window.location.protocol === 'http:' || window.location.protocol === 'https:') {
+        return new Worker('js/workers/benchmark-worker.js');
+      }
+    } catch (e) {}
+
+    if (!this._workerBlobUrl) {
+      const code = `self.onmessage=function(e){const{type,taskId,payload}=e.data,startTime=performance.now();if("monte-carlo-pi"===type){const{samples}=payload;let inside=0;for(let i=0;i<samples;i++){const x=Math.random(),y=Math.random();x*x+y*y<=1&&inside++}self.postMessage({type:"done",taskId,duration:performance.now()-startTime,result:{insideCircle:inside,samples}})}else if("mandelbrot"===type){const{width,height,startRow,endRow,maxIter,xMin,xMax,yMin,yMax}=payload,rowCount=endRow-startRow,buf=new Uint8ClampedArray(4*rowCount*width);let idx=0;for(let py=startRow;py<endRow;py++){const y0=yMin+(py/height)*(yMax-yMin);for(let px=0;px<width;px++){const x0=xMin+(px/width)*(xMax-xMin);let x=0,y=0,iter=0;for(;x*x+y*y<=4&&iter<maxIter;){const xTemp=x*x-y*y+x0;y=2*x*y+y0,x=xTemp,iter++}if(iter===maxIter)buf[idx]=10,buf[idx+1]=15,buf[idx+2]=30,buf[idx+3]=255;else{const norm=iter/maxIter;buf[idx]=Math.floor(200*Math.sin(norm*Math.PI)+40),buf[idx+1]=Math.floor(180*Math.sin(2*norm*Math.PI)+70),buf[idx+2]=Math.floor(255*(1-norm)),buf[idx+3]=255}idx+=4}}self.postMessage({type:"done",taskId,duration:performance.now()-startTime,result:{startRow,endRow,buffer:buf.buffer}},[buf.buffer])}else if("matrix-multiply"===type){const{n,startRow,endRow,matrixA,matrixB}=payload,a=new Float64Array(matrixA),b=new Float64Array(matrixB),rowCount=endRow-startRow,res=new Float64Array(rowCount*n);for(let i=startRow;i<endRow;i++){const localI=i-startRow;for(let j=0;j<n;j++){let sum=0;for(let k=0;k<n;k++)sum+=a[i*n+k]*b[k*n+j];res[localI*n+j]=sum}}self.postMessage({type:"done",taskId,duration:performance.now()-startTime,result:{startRow,endRow,rows:res.buffer}},[res.buffer])}};`;
+      const blob = new Blob([code], { type: 'application/javascript' });
+      this._workerBlobUrl = URL.createObjectURL(blob);
+    }
+    return new Worker(this._workerBlobUrl);
   }
 
   init() {
@@ -282,7 +298,7 @@ export class BenchmarkModule {
 
       for (let i = 0; i < threads; i++) {
         this.updateCoreStatus(i, 'active', `${Math.round(samplesPerThread / 1000)}k pts`);
-        const worker = new Worker('js/workers/benchmark-worker.js');
+        const worker = this.createWorker();
         workers.push(worker);
         this.activeWorkers.push(worker);
 
@@ -335,7 +351,7 @@ export class BenchmarkModule {
         const endRow = (i === threads - 1) ? height : (i + 1) * rowsPerWorker;
 
         this.updateCoreStatus(i, 'active', `Rows ${startRow}-${endRow}`);
-        const worker = new Worker('js/workers/benchmark-worker.js');
+        const worker = this.createWorker();
         workers.push(worker);
         this.activeWorkers.push(worker);
 
@@ -399,7 +415,7 @@ export class BenchmarkModule {
         const endRow = (i === threads - 1) ? n : (i + 1) * rowsPerWorker;
 
         this.updateCoreStatus(i, 'active', `Rows ${startRow}-${endRow}`);
-        const worker = new Worker('js/workers/benchmark-worker.js');
+        const worker = this.createWorker();
         workers.push(worker);
         this.activeWorkers.push(worker);
 
@@ -513,9 +529,19 @@ export class BenchmarkModule {
   }
 
   toggleButtons(enable) {
-    ['bench-run-single', 'bench-run-sweep', 'bench-reset'].forEach(id => {
+    ['bench-run-single', 'bench-run-sweep'].forEach(id => {
       const el = document.getElementById(id);
       if (el) el.disabled = !enable;
     });
+    const resetBtn = document.getElementById('bench-reset');
+    if (resetBtn) {
+      resetBtn.disabled = false;
+      resetBtn.textContent = enable ? 'Reset' : 'Cancel Run';
+      if (!enable) {
+        resetBtn.classList.add('border-rose-500/60', 'text-rose-300');
+      } else {
+        resetBtn.classList.remove('border-rose-500/60', 'text-rose-300');
+      }
+    }
   }
 }
